@@ -680,9 +680,6 @@ class my_contextmenu : public contextmenu_item_simple {
    virtual unsigned get_num_items(){
 	   return 4;
    };
-   virtual void get_item_default_path(unsigned p_index,pfc::string_base & p_out){
-	   p_out = "Last.fm";
-   };
    virtual void context_command(unsigned p_index,const pfc::list_base_const_t<metadb_handle_ptr> & p_data,const GUID & p_caller){
 	   if (p_index == 0) {
 		   if (p_data.get_count() > 0)
