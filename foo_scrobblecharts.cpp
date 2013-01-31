@@ -55,43 +55,6 @@ DECLARE_COMPONENT_VERSION( "Last.fm Chart Player", VERSION,
    "By Christian Fersch\n"
    __DATE__ " - " __TIME__ );
 
-/* Encode funny chars -> %xx in newly allocated storage */
-/* (preserves '/' !) */
-// returns the number of characters written (without closing NULL)
-pfc::string8 urlencode(const char *s) {
-	const char *p;
-	char *t = new char[strlen(s)*5+1];
-	char *tp;
-	if(t == NULL) {
-		fprintf(stderr, "Serious memory error...\n");
-		exit(1);
-	}
-	tp=t;
-	for(p=s; *p; p++) {
-		if (*p == '/') {
-			memcpy(tp, "%252F", 5);
-			tp += 5;
-		} else if(*p == '&') {
-			memcpy(tp, "%2526", 5);
-			tp += 5;
-		} else if(!((*p >= 'A' && *p <= 'Z') ||
-			(*p >= 'a' && *p <= 'z') ||
-			(*p >= '0' && *p <= '9') ||
-			(*p == '_' ) ||
-			(*p == '-' ))) {
-				sprintf(tp, "%%%02X", (unsigned char)*p);
-				tp += 3;
-		} else {
-			*tp = *p;
-			tp++;
-		}
-	}
-
-	*tp='\0';
-
-	return pfc::string8(t);
-};
-
 
 
 class FileNotFound : public pfc::exception {
@@ -262,7 +225,9 @@ descMap_t getArtistChart(pfc::string8 artist, abort_callback* abort = 0) throw (
 	descMap_t trackList;
 	pfc::string8 page;
 	pfc::string8 url;
-	url << "http://ws.audioscrobbler.com/1.0/artist/" << urlencode(artist) << "/toptracks.xml";
+	pfc::string8 artistEnc;
+	pfc::urlEncode(artistEnc, artist);
+	url << "http://ws.audioscrobbler.com/1.0/artist/" << artistEnc << "/toptracks.xml";
 	getUrl(url, page, abort);
 
 	if (abort != 0)
@@ -310,7 +275,9 @@ descMap_t getSimilarArtistChart(pfc::string8 artist, abort_callback* abort = 0){
 	descMap_t artistList;
 	pfc::string8 page;
 	pfc::string8 url;
-	url << "http://ws.audioscrobbler.com/1.0/artist/" << urlencode(artist) << "/similar.xml";
+	pfc::string8 artistEnc;
+	pfc::urlEncode(artistEnc, artist);
+	url << "http://ws.audioscrobbler.com/1.0/artist/" << artistEnc << "/similar.xml";
 	getUrl(url, page, abort);
 	if (abort != 0)
 		abort->check();

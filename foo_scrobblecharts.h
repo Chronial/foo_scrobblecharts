@@ -1,4 +1,3 @@
-pfc::string8 urlencode(const char *s);
 void filterTracksByArtist(const char * artist, pfc::list_base_t<metadb_handle_ptr> &p_data);
 int getTrackIndexByTitle(const char * title, const pfc::list_base_t<metadb_handle_ptr> &p_data);
 metadb_handle_ptr getTrackByTitle(const char * title, const pfc::list_base_t<metadb_handle_ptr> &p_data);
