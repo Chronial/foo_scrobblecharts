@@ -54,7 +54,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Wininet.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"

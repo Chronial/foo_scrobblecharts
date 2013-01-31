@@ -2,7 +2,6 @@
 
 #include "../_sdk/foobar2000/SDK/foobar2000.h"
 #include "../_sdk/foobar2000/helpers/helpers.h"
-#include <wininet.h>
 #include "xmlParser.h"
 #include <map>
 #include <vector>
@@ -62,50 +61,26 @@ public:
 	FileNotFound(): pfc::exception("Artist could not be found on Last.fm"){}
 };
 
-void getUrl(const char * url, pfc::string8 &page, abort_callback* abort) throw(pfc::exception){
-	HINTERNET inet = 0;
-	HINTERNET netUrl = 0;
-	DWORD statusCode;
-	DWORD statusCodeLength = sizeof(DWORD);
-	page.reset();
+void getUrl(const char * url, pfc::string8 &page, abort_callback* abort) throw(pfc::exception) {
+	http_client::ptr client;
+	char buffer[1025];
+	t_size bytes_read;
 	try {
-		inet = InternetOpenA("foo_scrobblecharts/" VERSION " (http://chron.visiondesigns.de/foobar2000)",INTERNET_OPEN_TYPE_PRECONFIG,NULL,NULL,NULL);
-		if (inet == NULL){
+		if (!service_enum_t<http_client>().first(client)) {
 			throw pfc::exception("Could not open internet connection.");
-			//console::error("foo_scrobblecharts: Could not open Internet Connection.");
-			//return false;
 		}
-		netUrl = InternetOpenUrlA(inet,url,NULL,NULL,INTERNET_FLAG_NO_UI,NULL);
-		if (netUrl == NULL){
-			throw pfc::exception("Couldn't connect to Last.fm server.");
-			//console::error("foo_scrobblecharts: Error opening Connection to Last.fm Server");
+		http_request::ptr request = client->create_request("GET");
+		file::ptr file_ptr = request->run(url, *abort);
+		while (bytes_read = file_ptr->read(buffer, 1024, *abort)) {
+			page.add_string(buffer, bytes_read);
 		}
-		HttpQueryInfo(netUrl,HTTP_QUERY_STATUS_CODE|HTTP_QUERY_FLAG_NUMBER ,&statusCode,&statusCodeLength,NULL);
-		if (statusCode == HTTP_STATUS_NOT_FOUND){
-			throw FileNotFound();
-			//throw pfc::exception("lalala");
-		} else if (statusCode != HTTP_STATUS_OK){
-			throw pfc::exception("Last.fm server returned an error.");
-		}
-		if (abort != 0)
-			abort->check();
-		char inBuff[1025];
-		DWORD readBytes;
-		int a=0;
-		while(InternetReadFile(netUrl,inBuff,1024,&readBytes)){
-			if (readBytes == 0)
-				break;
-			if (abort != 0)
-				abort->check();
-			page.add_string(inBuff,readBytes);
-		}
-	} catch (pfc::exception& exception) {
-		InternetCloseHandle(netUrl);
-		InternetCloseHandle(inet);
-		throw exception;
+	} catch (exception_aborted) {
+		throw exception_aborted();
+	} catch (...) {
+		throw pfc::exception("Couldn't connect to Last.fm server.");
 	}
-	return;
 }
+
 
 struct strCmp {
 	bool operator()( const char* s1, const char* s2 ) const {
