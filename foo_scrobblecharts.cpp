@@ -524,11 +524,10 @@ public:
 void generateArtistSimilarPlaylist(const pfc::list_base_const_t<metadb_handle_ptr> &tracks, bool useArtistCharts){
 	pfc::string8 artist = getMainArtist(tracks);
 	if (artist.get_length() > 0){
-		service_impl_t<ArtistSimilarPlaylistGenerator> generator(artist, useArtistCharts);
-		static_api_ptr_t<threaded_process> tp;
 		pfc::string8 title("Generating Similar Artists Playlist for ");
 		title += artist;
-		tp->run_modeless(&generator, tp->flag_show_abort | tp->flag_show_item | tp->flag_show_progress, core_api::get_main_window(), title, ~0);
+		service_ptr_t<threaded_process_callback> generator = new service_impl_t<ArtistSimilarPlaylistGenerator>(artist, useArtistCharts);
+		threaded_process::g_run_modeless(generator, threaded_process::flag_show_abort | threaded_process::flag_show_item, core_api::get_main_window(), title);
 	} else {
 		console::error("no Artist Information found");
 	}
@@ -607,11 +606,10 @@ public:
 void generateArtistPlaylist(const pfc::list_base_const_t<metadb_handle_ptr> &tracks){
 	pfc::string8 artist = getMainArtist(tracks);
 	if (artist.get_length() > 0){
-		service_impl_t<ArtistPlaylistGenerator> generator(artist);
-		static_api_ptr_t<threaded_process> tp;
 		pfc::string8 title("Generating Charts Playlist for ");
 		title += artist;
-		tp->run_modeless(&generator, tp->flag_show_abort | tp->flag_show_item, core_api::get_main_window(), title, ~0);
+		service_ptr_t<threaded_process_callback> generator = new service_impl_t<ArtistPlaylistGenerator>(artist);
+		threaded_process::g_run_modeless(generator, threaded_process::flag_show_abort | threaded_process::flag_show_item, core_api::get_main_window(), title);
 	} else {
 		console::error("no Artist Information found");
 	}
@@ -731,9 +729,8 @@ public:
 	}
 };
 void sortByCharts(){
-	service_impl_t<PlaylistSortWorker> worker;
-	static_api_ptr_t<threaded_process> tp;
-	tp->run_modal(&worker, tp->flag_show_abort | tp->flag_show_item, core_api::get_main_window(), "Sorting by artist charts", ~0);
+	service_ptr_t<threaded_process_callback> worker = new service_impl_t<PlaylistSortWorker>();
+	threaded_process::g_run_modeless(worker, threaded_process::flag_show_abort | threaded_process::flag_show_item, core_api::get_main_window(), "Sorting by artist charts");
 }
 
 
